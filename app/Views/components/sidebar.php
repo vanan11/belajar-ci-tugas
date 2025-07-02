@@ -26,6 +26,13 @@
             </li><!-- End Produk Nav -->
 
             <li class="nav-item">
+    <a class="nav-link <?php echo (uri_string() == 'profile') ? "" : "collapsed" ?>" href="profile">
+        <i class="bi bi-person"></i>
+        <span>Profile</span>
+    </a>
+</li><!-- End Profile Nav -->
+
+            <li class="nav-item">
                 <a class="nav-link <?= (uri_string() == 'kategori') ? '' : 'collapsed' ?>" href="kategori">
                     <i class="bi bi-tags"></i>
                     <span>Kategori Produk</span>
@@ -38,8 +45,7 @@
                 <i class="bi bi-question-circle"></i>
                 <span>F.A.Q</span>
             </a>
-        </li><!-- End FAQ Nav -->
-           
+        </li><!-- End FAQ Nav --> 
     </ul>
 
 </aside><!-- End Sidebar-->
