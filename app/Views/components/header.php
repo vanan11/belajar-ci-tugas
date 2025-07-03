@@ -16,9 +16,21 @@
   </form>
 </div><!-- End Search Bar -->
 
-<nav class="header-nav ms-auto">
-  <ul class="d-flex align-items-center">
+<!-- BAGIAN YANG DIMODIFIKASI: Tampilan Diskon dipindahkan di sini -->
+    <?php $session = \Config\Services::session(); ?>
+        <?php if ($session->has('active_discount_amount')): ?>
+            <div class="ms-3"> <!-- Menambahkan margin kiri untuk jarak dari search bar -->
+                <span class="badge bg-success py-2 px-3 rounded-3 text-white" style="font-size: 0.9em;">
+                    Hari ini ada diskon Rp<?php echo number_format($session->get('active_discount_amount'), 0, ',', '.'); ?> per item
+                </span>
+            </div>
+        <?php endif; ?>
+    </div>
+    <!-- AKHIR BAGIAN YANG DIMODIFIKASI -->
 
+    <nav class="header-nav ms-auto">
+  <ul class="d-flex align-items-center">
+            
     <li class="nav-item d-block d-lg-none">
       <a class="nav-link nav-icon search-bar-toggle " href="#">
         <i class="bi bi-search"></i>

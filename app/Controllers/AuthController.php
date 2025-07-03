@@ -4,19 +4,23 @@ namespace App\Controllers;
 
 use App\Controllers\BaseController;
 use CodeIgniter\HTTP\ResponseInterface;
+use App\Models\DiskonModel; // <--- TAMBAHKAN INI
+use CodeIgniter\I18n\Time; // <--- TAMBAHKAN INI
 
 use App\Models\UserModel;
 
 class AuthController extends BaseController
 {
     protected $user;
+    protected $diskonModel; // <--- TAMBAHKAN INI
 
     function __construct()
     {
         helper('form');
         $this->user= new UserModel();
+        $this->diskonModel = new DiskonModel(); // <--- TAMBAHKAN INI
     }
- public function login()
+public function login()
 {
     if ($this->request->getPost()) {
         $rules = [
@@ -38,6 +42,22 @@ class AuthController extends BaseController
                         'isLoggedIn' => TRUE
                     ]);
 
+                      // --- BAGIAN YANG DITAMBAHKAN/DIMODIFIKASI: Pencarian Diskon ---
+                        $currentDate = Time::today()->toDateString(); // Dapatkan tanggal hari ini (YYYY-MM-DD)
+
+                        // Cari diskon yang tanggalnya sama dengan hari ini
+                        $activeDiscount = $this->diskonModel->where('tanggal', $currentDate)->first();
+
+                        if ($activeDiscount) {
+                            // Simpan nominal diskon ke session
+                            session()->set('active_discount_amount', $activeDiscount['nominal']);
+                            // Tidak ada 'nama_diskon' di tabel Anda, jadi tidak bisa disimpan
+                        } else {
+                            // Jika tidak ada diskon aktif untuk hari ini, hapus dari session
+                            session()->remove('active_discount_amount');
+                        }
+                        // --- AKHIR BAGIAN YANG DITAMBAHKAN/DIMODIFIKASI ---
+
                     return redirect()->to(base_url('/'));
                 } else {
                     session()->setFlashdata('failed', 'Kombinasi Username & Password Salah');
@@ -58,6 +78,8 @@ class AuthController extends BaseController
 public function logout()
 {
     session()->destroy();
+    session()->remove('active_discount_amount');
+    session()->remove('active_discount_name');
     return redirect()->to('login');
 }
 }

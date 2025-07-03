@@ -3,25 +3,30 @@
 namespace App\Controllers;
 
 use CodeIgniter\HTTP\ResponseInterface;
-use CodeIgniter\RESTful\ResourceController;
+use CodeIgniter\RESTful\ResourceController; // Pastikan ini digunakan jika Anda ingin ResourceController
 
-use App\Models\UserModel; 
+use App\Models\UserModel;
 use App\Models\TransactionModel;
 use App\Models\TransactionDetailModel;
+use App\Models\ProductModel; // Pastikan ProductModel di-import
 
-class ApiController extends ResourceController
+class ApiController extends ResourceController // Menggunakan ResourceController
 {
     protected $apiKey;
     protected $user;
     protected $transaction;
     protected $transaction_detail;
+    protected $productModel; // Tambahkan properti untuk ProductModel
 
-    function _construct()
+    // PERBAIKAN: Mengubah _construct() menjadi __construct()
+    function __construct()
     {
-        $this->apiKey = env ('API_KEY');
+        // Pastikan env('API_KEY') sudah terdefinisi di file .env Anda
+        $this->apiKey = env('API_KEY');
         $this->user = new UserModel();
         $this->transaction = new TransactionModel();
         $this->transaction_detail = new TransactionDetailModel();
+        $this->productModel = new ProductModel(); // Inisialisasi ProductModel
     }
 
     /**
@@ -30,34 +35,51 @@ class ApiController extends ResourceController
      * @return ResponseInterface
      */
     public function index()
-{
-    $data = [ 
-        'results' => [],
-        'status' => ["code" => 401, "description" => "Unauthorized"]
-    ];
+    {
+        $data = [
+            'results' => [],
+            'status' => ["code" => 401, "description" => "Unauthorized"]
+        ];
 
-    $headers = $this->request->headers(); 
+        $headers = $this->request->headers();
 
-    array_walk($headers, function (&$value, $key) {
-        $value = $value->getValue();
-    });
+        array_walk($headers, function (&$value, $key) {
+            $value = $value->getValue();
+        });
 
-    if(array_key_exists("Key", $headers)){
-        if ($headers["Key"] == $this->apiKey) {
-            $penjualan = $this->transaction->findAll();
-            
-            foreach ($penjualan as &$pj) {
-                $pj['details'] = $this->transaction_detail->where('transaction_id', $pj['id'])->findAll();
+        if (array_key_exists("Key", $headers)) {
+            if ($headers["Key"] == $this->apiKey) {
+                $penjualan = $this->transaction->findAll();
+
+                foreach ($penjualan as &$pj) {
+                    $details = $this->transaction_detail->where('transaction_id', $pj['id'])->findAll();
+                    $totalItems = 0; // Inisialisasi total jumlah item per transaksi
+
+                    foreach ($details as &$detail) {
+                        $product = $this->productModel->find($detail['product_id']); // Ambil data produk
+                        if ($product) {
+                            $detail['product_name'] = $product['nama']; // Tambahkan nama produk
+                            // Jika ada kolom 'foto' di tabel produk, Anda bisa menambahkannya juga
+                            $detail['product_image'] = $product['foto']; // Contoh: tambahkan foto produk
+                        }
+                        $totalItems += $detail['jumlah']; // Menambahkan jumlah item
+                    }
+                    $pj['details'] = $details;
+                    $pj['total_items_bought'] = $totalItems; // Tambahkan total jumlah item ke transaksi
+                }
+
+                $data['status'] = ["code" => 200, "description" => "OK"];
+                $data['results'] = $penjualan;
+            } else {
+                $data['status'] = ["code" => 403, "description" => "Forbidden - Invalid API Key"];
             }
-
-            $data['status'] = ["code" => 200, "description" => "OK"];
-            $data['results'] = $penjualan;
-
+        } else {
+            $data['status'] = ["code" => 401, "description" => "Unauthorized - API Key Missing"];
         }
-    } 
 
-    return $this->respond($data);
-}
+        return $this->respond($data);
+    }
+
     /**
      * Return a new resource object, with default properties.
      *
@@ -65,7 +87,8 @@ class ApiController extends ResourceController
      */
     public function new()
     {
-        //
+        // Implementasi jika diperlukan
+        return $this->failUnauthorized('Method not allowed');
     }
 
     /**
@@ -75,7 +98,8 @@ class ApiController extends ResourceController
      */
     public function create()
     {
-        //
+        // Implementasi jika diperlukan
+        return $this->failUnauthorized('Method not allowed');
     }
 
     /**
@@ -87,7 +111,8 @@ class ApiController extends ResourceController
      */
     public function edit($id = null)
     {
-        //
+        // Implementasi jika diperlukan
+        return $this->failUnauthorized('Method not allowed');
     }
 
     /**
@@ -99,7 +124,8 @@ class ApiController extends ResourceController
      */
     public function update($id = null)
     {
-        //
+        // Implementasi jika diperlukan
+        return $this->failUnauthorized('Method not allowed');
     }
 
     /**
@@ -111,6 +137,7 @@ class ApiController extends ResourceController
      */
     public function delete($id = null)
     {
-        //
+        // Implementasi jika diperlukan
+        return $this->failUnauthorized('Method not allowed');
     }
 }
